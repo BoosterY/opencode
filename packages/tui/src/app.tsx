@@ -439,7 +439,9 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
 
     await clipboard
       .write?.(text)
-      .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
+      .then(() => {
+        if (tuiConfig.clipboard_toast) toast.show({ message: "Copied to clipboard", variant: "info" })
+      })
       .catch(toast.error)
 
     renderer.clearSelection()
@@ -602,7 +604,9 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           if (!workspace?.directory) return
           await clipboard
             .write?.(workspace.directory)
-            .then(() => toast.show({ message: "Copied worktree path", variant: "info" }))
+            .then(() => {
+              if (tuiConfig.clipboard_toast) toast.show({ message: "Copied worktree path", variant: "info" })
+            })
             .catch(toast.error)
           dialog.clear()
         },
@@ -1094,13 +1098,13 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         if (!Flag.OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT) return
         if (evt.button !== MouseButton.RIGHT) return
 
-        if (!Selection.copy(renderer, toast, clipboard)) return
+        if (!Selection.copy(renderer, toast, clipboard, { clipboardToast: tuiConfig.clipboard_toast })) return
         evt.preventDefault()
         evt.stopPropagation()
       }}
       onMouseUp={
         !Flag.OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT
-          ? () => Selection.copy(renderer, toast, clipboard)
+          ? () => Selection.copy(renderer, toast, clipboard, { clipboardToast: tuiConfig.clipboard_toast })
           : undefined
       }
     >

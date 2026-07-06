@@ -15,6 +15,7 @@ import { isConsoleManagedProvider } from "../util/provider-origin"
 import { useConnected } from "./use-connected"
 import { useBindings } from "../keymap"
 import { useClipboard } from "../context/clipboard"
+import { useTuiConfig } from "../config"
 
 const PROVIDER_PRIORITY: Record<string, number> = {
   opencode: 0,
@@ -243,6 +244,7 @@ function AutoMethod(props: AutoMethodProps) {
   const sync = useSync()
   const toast = useToast()
   const clipboard = useClipboard()
+  const tuiConfig = useTuiConfig()
 
   useBindings(() => ({
     bindings: [
@@ -255,7 +257,9 @@ function AutoMethod(props: AutoMethodProps) {
             props.authorization.instructions.match(/[A-Z0-9]{4}-[A-Z0-9]{4,5}/)?.[0] ?? props.authorization.url
           clipboard
             .write?.(code)
-            .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
+            .then(() => {
+              if (tuiConfig.clipboard_toast) toast.show({ message: "Copied to clipboard", variant: "info" })
+            })
             .catch(toast.error)
         },
       },

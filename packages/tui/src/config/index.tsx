@@ -63,10 +63,13 @@ export const Info = Schema.Struct({
   scroll_acceleration: Schema.optional(ScrollAcceleration),
   diff_style: Schema.optional(DiffStyle),
   mouse: Schema.optional(Schema.Boolean).annotate({ description: "Enable or disable mouse capture (default: true)" }),
+  clipboard_toast: Schema.optional(Schema.Boolean).annotate({
+    description: "Show toast notification on clipboard copy (default: false)",
+  }),
 })
 export type Info = Schema.Schema.Type<typeof Info>
 
-export type Resolved = Omit<Info, "attention" | "keybinds" | "leader_timeout" | "mouse"> & {
+export type Resolved = Omit<Info, "attention" | "keybinds" | "leader_timeout" | "mouse" | "clipboard_toast"> & {
   attention: {
     enabled: boolean
     notifications: boolean
@@ -78,6 +81,7 @@ export type Resolved = Omit<Info, "attention" | "keybinds" | "leader_timeout" | 
   keybinds: TuiKeybind.BindingLookupView
   leader_timeout: number
   mouse: boolean
+  clipboard_toast: boolean
 }
 
 export const ResolveOptions = Schema.Struct({
@@ -113,6 +117,7 @@ export function resolve(input: Info, options: ResolveOptions): Resolved {
     }),
     leader_timeout: input.leader_timeout ?? LeaderTimeoutDefault,
     mouse: input.mouse ?? true,
+    clipboard_toast: input.clipboard_toast ?? false,
   }
 }
 

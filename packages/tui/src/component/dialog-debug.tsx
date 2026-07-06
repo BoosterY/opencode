@@ -6,6 +6,7 @@ import { useDialog } from "../ui/dialog"
 import { useRoute } from "../context/route"
 import { useLocal } from "../context/local"
 import { useClipboard } from "../context/clipboard"
+import { useTuiConfig } from "../config"
 import { useToast } from "../ui/toast"
 import { useBindings } from "../keymap"
 import { describeOS, describeTerminal } from "../util/system"
@@ -17,6 +18,7 @@ export function DialogDebug() {
   const local = useLocal()
   const clipboard = useClipboard()
   const toast = useToast()
+  const tuiConfig = useTuiConfig()
   const [copied, setCopied] = createSignal(false)
 
   dialog.setSize("large")
@@ -41,7 +43,7 @@ export function DialogDebug() {
       .write?.(text)
       .then(() => {
         setCopied(true)
-        toast.show({ message: "Debug info copied to clipboard", variant: "info" })
+        if (tuiConfig.clipboard_toast) toast.show({ message: "Debug info copied to clipboard", variant: "info" })
       })
       .catch(toast.error)
   }

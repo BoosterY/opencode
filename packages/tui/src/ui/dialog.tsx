@@ -7,6 +7,7 @@ import { useToast } from "./toast"
 import { Flag } from "@opencode-ai/core/flag/flag"
 import { useBindings, useOpencodeModeStack } from "../keymap"
 import { useClipboard } from "../context/clipboard"
+import { useTuiConfig } from "../config"
 
 export function Dialog(
   props: ParentProps<{
@@ -184,12 +185,15 @@ export function DialogProvider(props: ParentProps) {
   const renderer = useRenderer()
   const toast = useToast()
   const clipboard = useClipboard()
+  const tuiConfig = useTuiConfig()
 
   function copySelection() {
     const text = renderer.getSelection()?.getSelectedText()
     if (!text || !clipboard.write) return false
     void clipboard.write(text).then(
-      () => toast.show({ message: "Copied to clipboard", variant: "info" }),
+      () => {
+        if (tuiConfig.clipboard_toast) toast.show({ message: "Copied to clipboard", variant: "info" })
+      },
       (error) => toast.error(error),
     )
     renderer.clearSelection()
