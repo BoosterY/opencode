@@ -74,6 +74,8 @@ async function openEditorInZellij(input: { editor: string; file: string; cwd: st
         "zellij",
         [
           "run",
+          "--name",
+          "editor",
           "--direction",
           "down",
           "--close-on-exit",
