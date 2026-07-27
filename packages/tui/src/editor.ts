@@ -28,13 +28,26 @@ export async function openEditor(input: { value: string; renderer: CliRenderer; 
   if (!editor) return
   const file = path.join(os.tmpdir(), `${Date.now()}.md`)
   await writeFile(file, input.value)
+  const cwd = input.cwd && existsSync(input.cwd) ? input.cwd : process.cwd()
+
+  // Inside zellij, open the editor in a split (tiled) pane instead of suspending
+  // the renderer. Suspending would leave the alternate screen and hide the
+  // session transcript, so the reply above is no longer visible while editing.
+  // A tiled split stacks opencode above the editor, both fully visible without
+  // overlap, and leaves any existing floating panes untouched (still reachable
+  // via alt+f). `--block-until-exit` preserves the read-back-after-edit
+  // semantics.
+  if (process.env.ZELLIJ !== undefined) {
+    return openEditorInZellij({ editor, file, cwd, renderer: input.renderer })
+  }
+
   input.renderer.suspend()
   input.renderer.currentRenderBuffer.clear()
   try {
     await new Promise<void>((resolve, reject) => {
       const parts = editor.split(" ")
       const child = spawn(parts[0]!, [...parts.slice(1), file], {
-        cwd: input.cwd && existsSync(input.cwd) ? input.cwd : process.cwd(),
+        cwd,
         stdio: [input.stdin ?? "inherit", "inherit", "inherit"],
         shell: process.platform === "win32",
       })
@@ -51,6 +64,57 @@ export async function openEditor(input: { value: string; renderer: CliRenderer; 
     input.renderer.resume()
     input.renderer.requestRender()
   }
+}
+
+async function openEditorInZellij(input: { editor: string; file: string; cwd: string; renderer: CliRenderer }) {
+  const paneID = process.env.ZELLIJ_PANE_ID
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(
+        "zellij",
+        [
+          "run",
+          "--direction",
+          "down",
+          "--close-on-exit",
+          "--block-until-exit",
+          "--cwd",
+          input.cwd,
+          "--",
+          // The pane opens split evenly; shrink it a few times so the editor
+          // takes roughly a third and most of opencode's reply stays visible.
+          // editor/file are passed as positional args to avoid shell escaping.
+          "sh",
+          "-c",
+          "zellij action resize decrease up; zellij action resize decrease up; zellij action resize decrease up; exec \"$@\"",
+          "sh",
+          ...input.editor.split(" "),
+          input.file,
+        ],
+        { stdio: "ignore" },
+      )
+      child.on("error", reject)
+      child.on("exit", (code, signal) => {
+        if (code === 0) return resolve()
+        reject(new Error(`Editor exited with ${signal ? `signal ${signal}` : `code ${code}`}`))
+      })
+    })
+    return (await readFile(input.file, "utf8")) || undefined
+  } finally {
+    await rm(input.file, { force: true }).catch(() => {})
+    // The editor pane closes on exit; focus back to our own pane so the prompt
+    // is active again instead of whichever pane zellij falls back to.
+    if (paneID) await refocusZellijPane(paneID)
+    input.renderer.requestRender()
+  }
+}
+
+function refocusZellijPane(paneID: string) {
+  return new Promise<void>((resolve) => {
+    const child = spawn("zellij", ["action", "focus-pane-id", paneID], { stdio: "ignore" })
+    child.on("error", () => resolve())
+    child.on("exit", () => resolve())
+  })
 }
 
 export function discoverEditorConnection(directory: string) {

@@ -286,6 +286,7 @@ export function Prompt(props: PromptProps) {
     extmarkToPartIndex: Map<number, number>
     interrupt: number
     placeholder: number
+    editing: boolean
   }>({
     placeholder: randomIndex(list().length),
     prompt: {
@@ -295,6 +296,7 @@ export function Prompt(props: PromptProps) {
     mode: "normal",
     extmarkToPartIndex: new Map(),
     interrupt: 0,
+    editing: false,
   })
 
   createEffect(
@@ -438,6 +440,7 @@ export function Prompt(props: PromptProps) {
           const nonTextParts = store.prompt.parts.filter((p) => p.type !== "text")
 
           const value = text
+          setStore("editing", true)
           const content = await openEditor({
             renderer,
             value,
@@ -445,7 +448,7 @@ export function Prompt(props: PromptProps) {
               (project.instance.path().worktree === "/" ? undefined : project.instance.path().worktree) ||
               project.instance.directory() ||
               paths.cwd,
-          })
+          }).finally(() => setStore("editing", false))
           if (!content) return
           const normalized = normalizePromptContent(content)
 
@@ -1346,7 +1349,7 @@ export function Prompt(props: PromptProps) {
 
   return (
     <>
-      <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false} width="100%">
+      <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false && !store.editing} width="100%">
         <box
           width="100%"
           border={["left"]}
