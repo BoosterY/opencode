@@ -54,6 +54,7 @@ test("resolves host-neutral defaults", () => {
   })
   expect(config.leader_timeout).toBe(LeaderTimeoutDefault)
   expect(config.mouse).toBe(true)
+  expect(config.mouse_select).toBe(true)
   expect(config.keybinds.has("terminal.suspend")).toBe(true)
   expect(config.keybinds.has("session.list")).toBe(true)
 })
@@ -78,6 +79,11 @@ test("resolves overrides without mutating input", () => {
   expect(config).toMatchObject({ theme: "custom", mouse: false, leader_timeout: 750, attention: input.attention })
   expect(config.keybinds.get("session.list")).toHaveLength(1)
   expect(input.keybinds).toEqual({ session_list: "ctrl+l" })
+})
+
+test("resolves mouse_select override", () => {
+  const config = resolve({ mouse_select: false }, { terminalSuspend: true })
+  expect(config.mouse_select).toBe(false)
 })
 
 test("resolves a session move keybind", () => {
