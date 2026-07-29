@@ -752,17 +752,23 @@ export function Autocomplete(props: {
               backgroundColor={index === store.selected ? theme.primary : undefined}
               flexDirection="row"
               onMouseMove={() => {
+                if (!tuiConfig.mouse_select) return
                 setStore("input", "mouse")
               }}
               onMouseOver={() => {
+                if (!tuiConfig.mouse_select) return
                 if (store.input !== "mouse") return
                 moveTo(index)
               }}
               onMouseDown={() => {
+                if (!tuiConfig.mouse_select) return
                 setStore("input", "mouse")
                 moveTo(index)
               }}
-              onMouseUp={() => select()}
+              onMouseUp={() => {
+                if (!tuiConfig.mouse_select) return
+                select()
+              }}
             >
               <text fg={index === store.selected ? selectedForeground(theme) : theme.text} flexShrink={0}>
                 {option().display}
