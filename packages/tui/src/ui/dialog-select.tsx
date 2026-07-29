@@ -640,16 +640,19 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
                           flexDirection="column"
                           position="relative"
                           onMouseMove={() => {
+                            if (!tuiConfig.mouse_select) return
                             if (props.locked) return
                             setStore("input", "mouse")
                             setFocusedAction(undefined)
                           }}
                           onMouseUp={() => {
+                            if (!tuiConfig.mouse_select) return
                             if (props.locked) return
                             option.onSelect?.(dialog)
                             props.onSelect?.(option)
                           }}
                           onMouseOver={() => {
+                            if (!tuiConfig.mouse_select) return
                             if (props.locked) return
                             if (store.input !== "mouse") return
                             const index = flat().findIndex((x) => isDeepEqual(x.value, option.value))
@@ -657,6 +660,7 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
                             moveTo(index)
                           }}
                           onMouseDown={() => {
+                            if (!tuiConfig.mouse_select) return
                             if (props.locked) return
                             const index = flat().findIndex((x) => isDeepEqual(x.value, option.value))
                             if (index === -1) return
