@@ -367,9 +367,16 @@ export function QuestionPrompt(props: { request: QuestionRequest; directory?: st
                   const picked = () => store.answers[store.tab]?.includes(opt.label) ?? false
                   return (
                     <box
-                      onMouseOver={() => moveTo(i())}
-                      onMouseDown={() => moveTo(i())}
+                      onMouseOver={() => {
+                        if (!tuiConfig.mouse_select) return
+                        moveTo(i())
+                      }}
+                      onMouseDown={() => {
+                        if (!tuiConfig.mouse_select) return
+                        moveTo(i())
+                      }}
                       onMouseUp={() => {
+                        if (!tuiConfig.mouse_select) return
                         if (renderer.getSelection()?.getSelectedText()) return
                         selectOption()
                       }}
@@ -399,9 +406,16 @@ export function QuestionPrompt(props: { request: QuestionRequest; directory?: st
               </For>
               <Show when={custom()}>
                 <box
-                  onMouseOver={() => moveTo(options().length)}
-                  onMouseDown={() => moveTo(options().length)}
+                  onMouseOver={() => {
+                    if (!tuiConfig.mouse_select) return
+                    moveTo(options().length)
+                  }}
+                  onMouseDown={() => {
+                    if (!tuiConfig.mouse_select) return
+                    moveTo(options().length)
+                  }}
                   onMouseUp={() => {
+                    if (!tuiConfig.mouse_select) return
                     if (renderer.getSelection()?.getSelectedText()) return
                     selectOption()
                   }}
