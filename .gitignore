@@ -37,3 +37,7 @@ logs/
 *.bun-build
 tsconfig.tsbuildinfo
 /artifacts/
+
+# Superpowers local work products
+.superpowers/
+docs/superpowers/
