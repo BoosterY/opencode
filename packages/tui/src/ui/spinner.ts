@@ -202,7 +202,9 @@ export function deriveTrailColors(brightColor: ColorInput, steps: number = 6): R
   const colors: RGBA[] = []
 
   for (let i = 0; i < steps; i++) {
-    // Alpha-based falloff with optional bloom effect
+    // Brightness-based falloff instead of alpha decay. Keeping alpha high keeps
+    // the trail in the agent's hue instead of blending into the background and
+    // reading as gray on dark themes.
     let alpha: number
     let brightnessFactor: number
 
@@ -211,13 +213,13 @@ export function deriveTrailColors(brightColor: ColorInput, steps: number = 6): R
       alpha = 1.0
       brightnessFactor = 1.0
     } else if (i === 1) {
-      // Slight bloom/glare effect: brighten color but reduce opacity slightly
-      alpha = 0.9
-      brightnessFactor = 1.15
+      // Slight bloom/glare effect: brighten the head, stay fully opaque
+      alpha = 1.0
+      brightnessFactor = 1.2
     } else {
-      // Exponential alpha decay for natural-looking trail fade
-      alpha = Math.pow(0.65, i - 1)
-      brightnessFactor = 1.0
+      // Stay nearly opaque and dim via brightness so the trail keeps its color
+      alpha = Math.max(0.7, Math.pow(0.9, i - 1))
+      brightnessFactor = Math.max(0.35, Math.pow(0.72, i - 1))
     }
 
     const r = Math.min(1.0, baseRgba.r * brightnessFactor)
