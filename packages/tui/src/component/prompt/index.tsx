@@ -1331,16 +1331,16 @@ export function Prompt(props: PromptProps) {
       frames: createFrames({
         color,
         style: "blocks",
-        inactiveFactor: 0.6,
+        inactiveFactor: 0.85,
         // enableFading: false,
-        minAlpha: 0.3,
+        minAlpha: 0.55,
       }),
       color: createColors({
         color,
         style: "blocks",
-        inactiveFactor: 0.6,
+        inactiveFactor: 0.85,
         // enableFading: false,
-        minAlpha: 0.3,
+        minAlpha: 0.55,
       }),
     }
   })
