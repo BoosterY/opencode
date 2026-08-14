@@ -37,7 +37,14 @@ export async function openEditor(input: { value: string; renderer: CliRenderer; 
   // overlap, and leaves any existing floating panes untouched (still reachable
   // via alt+f). `--block-until-exit` preserves the read-back-after-edit
   // semantics.
-  if (process.env.ZELLIJ !== undefined) {
+  //
+  // The ZELLIJ env var only proves we were spawned inside a pane, not that the
+  // CLI can still reach the server. An already-attached client keeps working off
+  // its established connection even after the server socket is unlinked (for
+  // example when XDG_RUNTIME_DIR is wiped by a login/dotfile script), while any
+  // newly spawned `zellij` process fails to connect. Probe first and fall back
+  // to suspending so /editor keeps working instead of silently doing nothing.
+  if (process.env.ZELLIJ !== undefined && (await zellijReachable())) {
     return openEditorInZellij({ editor, file, cwd, renderer: input.renderer })
   }
 
@@ -109,6 +116,26 @@ async function openEditorInZellij(input: { editor: string; file: string; cwd: st
     if (paneID) await refocusZellijPane(paneID)
     input.renderer.requestRender()
   }
+}
+
+// A cheap read-only action that still requires a live server connection, so it
+// distinguishes "inside a pane" from "can actually drive zellij". Commands like
+// `list-sessions` only read the session_info cache and succeed even when the
+// socket is gone, so they cannot be used here.
+function zellijReachable() {
+  return new Promise<boolean>((resolve) => {
+    const child = spawn("zellij", ["action", "query-tab-names"], { stdio: "ignore" })
+    const timer = setTimeout(() => {
+      child.kill()
+      resolve(false)
+    }, 2000)
+    const settle = (value: boolean) => {
+      clearTimeout(timer)
+      resolve(value)
+    }
+    child.on("error", () => settle(false))
+    child.on("exit", (code) => settle(code === 0))
+  })
 }
 
 function refocusZellijPane(paneID: string) {

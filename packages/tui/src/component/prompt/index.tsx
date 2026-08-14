@@ -448,7 +448,16 @@ export function Prompt(props: PromptProps) {
               (project.instance.path().worktree === "/" ? undefined : project.instance.path().worktree) ||
               project.instance.directory() ||
               paths.cwd,
-          }).finally(() => setStore("editing", false))
+          })
+            .catch((err) => {
+              console.log("Opening the editor failed:", err)
+              toast.show({
+                message: "Opening the editor failed. Open console for more details.",
+                variant: "error",
+              })
+              return undefined
+            })
+            .finally(() => setStore("editing", false))
           if (!content) return
           const normalized = normalizePromptContent(content)
 
