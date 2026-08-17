@@ -11,6 +11,9 @@ export const MessageID = Schema.String.check(Schema.isStartsWith("msg")).pipe(
   Schema.brand("MessageID"),
   statics((s) => ({
     ascending: (id?: string) => s.make(Identifier.ascending("message", id)),
+    // Use instead of `<`/`>` on message ids: the encoded time field wraps every
+    // 2^36 ms, so lexicographic order is not chronological. See Identifier.compare.
+    compare: Identifier.compare,
   })),
 )
 

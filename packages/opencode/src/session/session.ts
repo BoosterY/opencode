@@ -705,7 +705,7 @@ const layer: Layer.Layer<
       const idMap = new Map<string, MessageID>()
 
       for (const msg of msgs) {
-        if (input.messageID && msg.info.id >= input.messageID) break
+        if (input.messageID && MessageID.compare(msg.info.id, input.messageID) >= 0) break
         const newID = MessageID.ascending()
         idMap.set(msg.info.id, newID)
 

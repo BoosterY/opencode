@@ -577,9 +577,10 @@ export const filterCompactedEffect = Effect.fnUntraced(function* (sessionID: Ses
 
 // filterCompacted reorders messages for model consumption
 // ([compaction-user, summary, ...retained tail..., continue-user]), so array
-// position is not chronological. Derive each binding by max id (MessageID
-// is monotonic via MessageID.ascending) so a pre-compaction overflowing tail
-// assistant doesn't get mistaken for the most recent turn. tasks are
+// position is not chronological. Derive each binding by newest id (via
+// MessageID.compare, since the id's time field wraps every 2^36 ms and plain
+// `>` is not chronological across that boundary) so a pre-compaction
+// overflowing tail assistant doesn't get mistaken for the most recent turn. tasks are
 // compaction/subtask parts attached to user messages newer than the latest
 // finished assistant — i.e. unprocessed work.
 export function latest(msgs: WithParts[]) {
@@ -588,12 +589,13 @@ export function latest(msgs: WithParts[]) {
   let finished: Assistant | undefined
   for (const msg of msgs) {
     const info = msg.info
-    if (info.role === "user" && (!user || info.id > user.id)) user = info
-    if (info.role === "assistant" && (!assistant || info.id > assistant.id)) assistant = info
-    if (info.role === "assistant" && info.finish && (!finished || info.id > finished.id)) finished = info
+    if (info.role === "user" && (!user || MessageID.compare(info.id, user.id) > 0)) user = info
+    if (info.role === "assistant" && (!assistant || MessageID.compare(info.id, assistant.id) > 0)) assistant = info
+    if (info.role === "assistant" && info.finish && (!finished || MessageID.compare(info.id, finished.id) > 0))
+      finished = info
   }
   const tasks = msgs.flatMap((m) =>
-    finished && m.info.id <= finished.id
+    finished && MessageID.compare(m.info.id, finished.id) <= 0
       ? []
       : m.parts.filter((p): p is CompactionPart | SubtaskPart => p.type === "compaction" || p.type === "subtask"),
   )

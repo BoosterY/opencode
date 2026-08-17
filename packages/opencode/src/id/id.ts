@@ -77,4 +77,36 @@ export function timestamp(id: string): number {
   return Number(encoded / BigInt(0x1000))
 }
 
+/**
+ * The encoded time field is 6 bytes (48 bits) holding `timestamp * 0x1000 + counter`.
+ * That product outgrew 48 bits on 2026-08-14T11:19:55.136Z, so the field silently
+ * wraps every 2^36 ms (~2.2 years): IDs minted after a wrap sort lexicographically
+ * BELOW those minted before it. Comparing two IDs with `<` is therefore not a valid
+ * chronological test across a wrap boundary — it made `SessionPrompt.runLoop` treat
+ * a fresh user message as already-answered and exit without calling the model.
+ *
+ * Widening the field would change ID length and invalidate every stored ID, so
+ * compare through this helper instead: it reads the field as a circular counter,
+ * where a gap wider than half the period means a wrap, not a 1.1-year jump.
+ */
+const PERIOD = BigInt(1) << BigInt(48)
+const HALF_PERIOD = PERIOD >> BigInt(1)
+
+/** Raw 48-bit time field of an ascending ID. */
+function encoded(id: string): bigint {
+  const underscore = id.indexOf("_")
+  return BigInt("0x" + id.slice(underscore + 1, underscore + 13))
+}
+
+/**
+ * Chronological comparison of two ascending IDs, tolerant of the 48-bit wrap.
+ * `<0` if `a` predates `b`, `>0` if `a` is newer, `0` if identical.
+ * Usable directly as an Array#sort comparator.
+ */
+export function compare(a: string, b: string): number {
+  const diff = (encoded(a) - encoded(b) + PERIOD) % PERIOD
+  if (diff === BigInt(0)) return 0
+  return diff < HALF_PERIOD ? 1 : -1
+}
+
 export * as Identifier from "./id"
