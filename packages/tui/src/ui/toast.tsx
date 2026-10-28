@@ -5,6 +5,7 @@ import { useRenderer, useTerminalDimensions } from "@opentui/solid"
 import { SplitBorder } from "./border"
 import { TextAttributes } from "@opentui/core"
 import { errorMessage } from "../util/error"
+import { useOptionalConfig } from "../config"
 export type ToastOptions = {
   title?: string
   message: string
@@ -15,7 +16,10 @@ export type ToastOptions = {
     run: () => void
   }
 }
-type ToastInput = Omit<ToastOptions, "duration"> & { duration?: number }
+// `clipboard` marks a "copied to clipboard" confirmation. These are suppressed
+// unless `terminal.copy_toast` is enabled, so every copy site opts in with one
+// flag instead of each reading the config itself.
+type ToastInput = Omit<ToastOptions, "duration"> & { duration?: number; clipboard?: boolean }
 
 function ToastSurface(props: {
   toast: ToastOptions
@@ -118,7 +122,7 @@ export function Toast() {
   )
 }
 
-function init() {
+function init(copyToast: () => boolean) {
   const [store, setStore] = createStore({
     currentToast: null as ToastOptions | null,
     queue: [] as ToastOptions[],
@@ -156,7 +160,8 @@ function init() {
   }
 
   const toast = {
-    show(options: ToastInput) {
+    show({ clipboard, ...options }: ToastInput) {
+      if (clipboard && !copyToast()) return
       const toastOptions = { ...options, duration: options.duration ?? 5000 }
       if (store.currentToast && (paused || store.queue.length > 0)) {
         setStore("queue", (queue) => [...queue, toastOptions])
@@ -201,7 +206,8 @@ export type ToastContext = ReturnType<typeof init>
 const ctx = createContext<ToastContext>()
 
 export function ToastProvider(props: ParentProps) {
-  const value = init()
+  const config = useOptionalConfig()
+  const value = init(() => config?.data.terminal?.copy_toast ?? false)
   return <ctx.Provider value={value}>{props.children}</ctx.Provider>
 }
 

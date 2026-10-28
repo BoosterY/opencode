@@ -398,7 +398,7 @@ function DialogGoUpsellConnect(props: { canContinue?: () => boolean; onSubscribe
     const value = current.instructions.match(OAUTH_CODE)?.[0] ?? current.url
     clipboard
       .write(value)
-      .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
+      .then(() => toast.show({ message: "Copied to clipboard", variant: "info", clipboard: true }))
       .catch(toast.error)
   }
 

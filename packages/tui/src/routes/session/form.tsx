@@ -490,7 +490,7 @@ export function FormPrompt(props: { form: FormWithLocation }) {
       .write(current.url)
       .then(() => {
         setStore("externalReady", { ...store.externalReady, [current.key]: true })
-        toast.show({ message: "Copied URL to clipboard", variant: "info" })
+        toast.show({ message: "Copied URL to clipboard", variant: "info", clipboard: true })
       })
       .catch(toast.error)
   }

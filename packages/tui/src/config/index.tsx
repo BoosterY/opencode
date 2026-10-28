@@ -134,6 +134,9 @@ export const Info = Schema.Struct({
       copy: Schema.optional(Schema.Literals(["manual", "select"])).annotate({
         description: "Copy text manually or immediately after selecting it",
       }),
+      copy_toast: Schema.optional(Schema.Boolean).annotate({
+        description: "Show a toast after copying to the clipboard (default: false)",
+      }),
     }),
   ).annotate({ description: "Terminal integration settings" }),
   prompt: Schema.optional(
@@ -378,6 +381,11 @@ export function useConfig() {
   const value = useContext(ConfigContext)
   if (!value) throw new Error("ConfigProvider is missing")
   return value
+}
+
+/** Like useConfig, but returns undefined outside a ConfigProvider (e.g. isolated component tests). */
+export function useOptionalConfig() {
+  return useContext(ConfigContext)
 }
 
 /** Reactive accessor for the temporary "new-designs" experiment. */

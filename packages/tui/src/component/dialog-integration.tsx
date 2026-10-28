@@ -681,7 +681,7 @@ function OAuthAuto(props: {
     const value = props.attempt.instructions.match(OAUTH_CODE)?.[0] ?? props.attempt.url
     clipboard
       .write(value)
-      .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
+      .then(() => toast.show({ message: "Copied to clipboard", variant: "info", clipboard: true }))
       .catch(toast.error)
   }
 

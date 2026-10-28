@@ -602,7 +602,7 @@ function App() {
 
     await clipboard
       .write(text)
-      .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
+      .then(() => toast.show({ message: "Copied to clipboard", variant: "info", clipboard: true }))
       .catch(toast.error)
 
     renderer.clearSelection()

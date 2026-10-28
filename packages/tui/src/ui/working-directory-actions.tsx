@@ -29,7 +29,7 @@ export function useWorkingDirectoryActions(input: { directory: () => string | un
             onSelect: (dialog) => {
               void clipboard.write(directory).then(() => {
                 dialog.clear()
-                toast.show({ message: "Path copied to clipboard", variant: "info" })
+                toast.show({ message: "Path copied to clipboard", variant: "info", clipboard: true })
               }, toast.error)
             },
           },

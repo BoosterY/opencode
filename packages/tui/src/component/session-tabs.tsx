@@ -398,7 +398,7 @@ function TabContextMenu(props: { state: TabContextMenuState; tabs: SessionTabsCo
               run: () =>
                 void clipboard
                   .write(sessionID)
-                  .then(() => toast.show({ message: "Session ID copied to clipboard", variant: "info" }))
+                  .then(() => toast.show({ message: "Session ID copied to clipboard", variant: "info", clipboard: true }))
                   .catch(toast.error),
             },
             { title: "Close", run: () => props.tabs.close(sessionID) },
