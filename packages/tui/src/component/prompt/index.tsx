@@ -362,12 +362,16 @@ export function Prompt(props: PromptProps) {
     extmarkToPart: Map<number, PromptPartRef>
     interrupt: number
     placeholder: number
+    // True while /editor has the prompt open in a zellij split; hides the
+    // prompt input so the transcript gets the freed rows.
+    editing: boolean
   }>({
     placeholder: randomIndex(list().length),
     prompt: emptyPrompt(),
     mode: "normal",
     extmarkToPart: new Map(),
     interrupt: 0,
+    editing: false,
   })
   let disposed = false
   let pasteQueue = Promise.resolve()
@@ -557,6 +561,7 @@ export function Prompt(props: PromptProps) {
 
           const editorPrompt = expandPromptInputPastedText(store.prompt, store.prompt.pasted, renderer.widthMethod)
           const value = editorPrompt.text
+          setStore("editing", true)
           const content = await openEditor({
             renderer,
             value,
@@ -567,6 +572,7 @@ export function Prompt(props: PromptProps) {
           }).catch((error) => {
             toast.show({ title: "Failed to open editor", message: errorMessage(error), variant: "error" })
           })
+            .finally(() => setStore("editing", false))
           if (!content) return
           const normalized = normalizePromptContent(content)
 
@@ -1677,7 +1683,7 @@ export function Prompt(props: PromptProps) {
 
   return (
     <>
-      <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false} width="100%">
+      <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false && !store.editing} width="100%">
         <box
           width="100%"
           border={["left"]}
