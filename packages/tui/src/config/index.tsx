@@ -137,6 +137,11 @@ export const Info = Schema.Struct({
       copy_toast: Schema.optional(Schema.Boolean).annotate({
         description: "Show a toast after copying to the clipboard (default: false)",
       }),
+      copy_destination: Schema.optional(Schema.Literals(["all", "terminal"])).annotate({
+        description:
+          "Where copies go: 'all' = terminal (OSC 52) and the system clipboard, 'terminal' = OSC 52 only " +
+          "(avoids two clipboard owners racing, e.g. WSLg). Default: all",
+      }),
     }),
   ).annotate({ description: "Terminal integration settings" }),
   prompt: Schema.optional(

@@ -140,3 +140,25 @@ test("rejects only when no clipboard route accepted the write", async () => {
   expect(await clipboard.write("hello").then(undefined, (error) => error)).toBe(failure)
   expect(writes).toEqual([["hello", { destination: "all-available", selection: "clipboard" }]])
 })
+
+test("terminal-only copy destination skips the host clipboard", async () => {
+  const destinations: string[] = []
+  const clipboard = createClipboardAdapter(
+    coreClipboard({
+      write: { host: { status: "not-attempted" }, terminal: { status: "attempted", capability: "supported" } },
+      onWrite: (_text, input) => destinations.push(input.destination),
+    }),
+    { destination: "terminal-only" },
+  )
+  await clipboard.write("hello")
+  expect(destinations).toEqual(["terminal-only"])
+})
+
+test("copy destination defaults to all available routes", async () => {
+  const destinations: string[] = []
+  const clipboard = createClipboardAdapter(
+    coreClipboard({ onWrite: (_text, input) => destinations.push(input.destination) }),
+  )
+  await clipboard.write("hello")
+  expect(destinations).toEqual(["all-available"])
+})

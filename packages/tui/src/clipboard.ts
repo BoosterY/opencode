@@ -4,22 +4,32 @@ import {
   createRendererClipboardAdapter,
   decodePasteBytes,
   type ClipboardService as CoreClipboardService,
+  type ClipboardWriteDestination,
   type RendererClipboardBoundary,
 } from "@opentui/core"
 import type { ClipboardContent, ClipboardService } from "./context/clipboard"
 
 export type OwnedClipboardService = Required<ClipboardService> & Readonly<{ dispose(): Promise<void> }>
 
-export function createTuiClipboard(renderer: RendererClipboardBoundary): OwnedClipboardService {
+export type ClipboardAdapterOptions = Readonly<{ destination?: ClipboardWriteDestination }>
+
+export function createTuiClipboard(
+  renderer: RendererClipboardBoundary,
+  options: ClipboardAdapterOptions = {},
+): OwnedClipboardService {
   return createClipboardAdapter(
     createClipboard({
       host: createHostClipboard(),
       terminal: createRendererClipboardAdapter(renderer),
     }),
+    options,
   )
 }
 
-export function createClipboardAdapter(clipboard: CoreClipboardService): OwnedClipboardService {
+export function createClipboardAdapter(
+  clipboard: CoreClipboardService,
+  options: ClipboardAdapterOptions = {},
+): OwnedClipboardService {
   return {
     async read(): Promise<ClipboardContent | undefined> {
       const result = await clipboard.read({
@@ -53,7 +63,7 @@ export function createClipboardAdapter(clipboard: CoreClipboardService): OwnedCl
     async write(text) {
       // OpenTUI rejects NUL before any destination; host clipboard text cannot contain it.
       const result = await clipboard.writeText(text.replaceAll("\0", ""), {
-        destination: "all-available",
+        destination: options.destination ?? "all-available",
         selection: "clipboard",
       })
       if (result.host.status === "written" || result.terminal.status === "attempted") return
